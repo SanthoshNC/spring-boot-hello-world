@@ -19,6 +19,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      ## Maven Build
+      - name: Maven Build
+        run: mvn clean build
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v3.0.0
         env:
@@ -30,4 +34,4 @@ jobs:
                 -Dsonar.sources=.
                 -Dsonar.verbose=true
                 -Dsonar.language=java
-                -Dsonar.java.binaries=**/target/classes  
+                -Dsonar.java.binaries=./target/classes  
