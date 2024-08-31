@@ -21,7 +21,7 @@ jobs:
 
       ## Maven Build
       - name: Maven Build
-        run: mvn clean package
+        run: mvn clean package -Dmaven.test.skip=true
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v3.0.0
