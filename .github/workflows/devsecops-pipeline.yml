@@ -23,6 +23,7 @@ jobs:
       - name: Maven Build
         run: mvn clean package -Dmaven.test.skip=true
 
+      ## SAST Scanning
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v3.0.0
         env:
@@ -35,3 +36,19 @@ jobs:
                 -Dsonar.verbose=true
                 -Dsonar.language=java
                 -Dsonar.java.binaries=./target/classes  
+
+      ## SCA - OWASP Dependency Check
+      - name: Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
+        with:
+          project: 'test'
+          path: '.'
+          format: 'HTML'
+          out: 'reports' # this is the default, no need to specify unless you wish to override it
+
+      - name: Upload Test results
+        uses: actions/upload-artifact@v4
+        with:
+           name: Depcheck report
+           path: ${{github.workspace}}/reports
