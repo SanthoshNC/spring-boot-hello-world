@@ -29,3 +29,5 @@ jobs:
                 -Dsonar.projectKey=santhosh-devops-demo_spring-boot-hello-world
                 -Dsonar.sources=.
                 -Dsonar.verbose=true
+                -Dsonar.language=java
+                -Dsonar.java.binaries=**/target/classes  
