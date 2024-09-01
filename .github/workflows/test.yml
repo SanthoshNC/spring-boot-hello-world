@@ -41,7 +41,7 @@ jobs:
     steps:
     - name: Run OWASP ZAP Scan
       run: |
-        docker run -v $(pwd):/zap/wrk:rw -t owasp/zap2docker-stable zap-baseline.py \
+        docker run -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap.sh \
         -t ${{ env.SERVICE_URL }} \
         -r zap_report.html
 
@@ -58,11 +58,7 @@ jobs:
     steps:
     - name: Run Dastardly Scan
       run: |
-        docker run --rm -v $(pwd):/output dastardly/dastardly \
-        --target-url=${{ env.SERVICE_URL }}
-
-    - name: Upload Dastardly Report as Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: dastardly-report
-        path: output/dastardly_report.html
+          docker run --user $(id -u) --rm -v $(pwd):/dastardly -e \
+          BURP_START_URL=${{ env.SERVICE_URL }} -e \
+          BURP_REPORT_FILE_PATH=/dastardly/dastardly-report.xml \
+          public.ecr.aws/portswigger/dastardly:latest
