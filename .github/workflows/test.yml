@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  - push
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    name: Build Example and Deploy to Minikube
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: medyagh/local-dev-example-with-minikube
+
+    - name: Start Minikube
+      uses: medyagh/setup-minikube@latest
+
+    - name: Try the Cluster!
+      run: kubectl get pods -A
+
+    - name: Build Image
+      run: |
+        minikube image build -t local/devex:v1 .
+
+    - name: Deploy to Minikube
+      run: |
+        kubectl apply -f deploy/k8s.yaml
+        kubectl wait --for=condition=ready pod -l app=local-devex
+
+    - name: Test Service URLs
+      id: service-url
+      run: |
+        MINIKUBE_URL=$(minikube service local-devex-svc --url)
+        echo "SERVICE_URL=$MINIKUBE_URL" >> $GITHUB_ENV
+        curl $MINIKUBE_URL
+
+  zap_scan:
+    runs-on: ubuntu-latest
+    needs: job1
+    name: OWASP ZAP Scan
+    steps:
+    - name: Run OWASP ZAP Scan
+      run: |
+        docker run -v $(pwd):/zap/wrk:rw -t owasp/zap2docker-stable zap-baseline.py \
+        -t ${{ env.SERVICE_URL }} \
+        -r zap_report.html
+
+    - name: Upload ZAP Report as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: zap-report
+        path: zap_report.html
+
+  dastardly_scan:
+    runs-on: ubuntu-latest
+    needs: job1
+    name: Dastardly Scan
+    steps:
+    - name: Run Dastardly Scan
+      run: |
+        docker run --rm -v $(pwd):/output dastardly/dastardly \
+        --target-url=${{ env.SERVICE_URL }}
+
+    - name: Upload Dastardly Report as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dastardly-report
+        path: output/dastardly_report.html
